@@ -1,0 +1,64 @@
+\documentclass[UTF8]{ctexart}
+\usepackage[a4paper, top=25.4mm, bottom=25.4mm, left=31.8mm, right=31.8mm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{verbatim}
+\usepackage{subcaption}
+\usepackage{tabu}
+\usepackage{booktabs}
+\usepackage{minted}
+\usemintedstyle{manni}
+\usepackage[table]{xcolor}
+
+\setlength{\parskip}{1em}
+\definecolor{lightergray}{gray}{0.95}
+\setlength{\tabcolsep}{12pt}
+\renewcommand{\arraystretch}{1}
+
+\begin{document}
+\begin{titlepage}
+  \begin{center}
+    \vspace*{1cm}
+
+    \Large
+    编译原理
+
+    \vspace{0.5cm}
+    \Huge
+    \textbf{语法分析实验实验报告}
+
+    \vfill
+
+    \normalsize\kaishu
+    班级：07111603 \\
+    学号：1120161730 \\
+    姓名：武上博 \\
+    \today
+    \vspace{1cm}
+  \end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{实验目的}
+\begin{enumerate}
+  \item 熟悉 C 语言的语法规则，了解编译器语法分析器的主要功能
+  \item 熟练掌握典型语法分析器构造的相关技术和方法，设计并实现具有一定分析能力的 C 语言语法分析器
+  \item 掌握编译器从前端到后端各个模块的工作原理，语法分析模块与其他模块之间的交互过程
+\end{enumerate}
+
+\section{实验内容}
+\begin{enumerate}
+  \item 该实验选择 C 语言的一个子集，基于 BIT-MiniCC 构建 C 语法子集的语法分析器，该语法分析器能够读入 XML 文件形式的属性字符流，进行语法分析并进行错误处理，如果输入正确时输出 XML 形式的语法树，输入不正确时报告语法错误。
+  \item 将分析树转换为抽象语法树，便于后续分析工作和代码生成工作的完成。
+\end{enumerate}
+
+\section{实验的具体过程步骤}
+
+\section{运行效果}
+
+\section{实验心得体会}
+
+\end{document}
