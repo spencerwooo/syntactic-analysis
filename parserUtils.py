@@ -7,9 +7,10 @@ def readGrammar(filePath):
       line = line.rstrip('\n')
       grammar.append(line)
   # 扩展文法
-  grammar.insert(0, grammar[0][0] + '`->' + grammar[0][0])
+  grammar.insert(0, grammar[0][0] + '` -> ' + grammar[0][0])
   return grammar
 
+# 区分终结符与非终结符
 def differentiateSymbols(grammar):
   # 终结符
   terminalSymbols = []
@@ -20,10 +21,13 @@ def differentiateSymbols(grammar):
 
   for eachGrammar in grammar:
     preGrammar, postGrammar = eachGrammar.split('->')
+    preGrammar = preGrammar.rstrip(' ')
 
     if preGrammar not in nonTerminalSymbols:
       nonTerminalSymbols.append(preGrammar)
-    for eachPostGrammar in postGrammar:
+
+    postGrammarList = postGrammar.lstrip(' ').split(' ')
+    for eachPostGrammar in postGrammarList:
       tempSymbols.append(eachPostGrammar)
 
   for eachTempSymbol in tempSymbols:
@@ -32,3 +36,15 @@ def differentiateSymbols(grammar):
 
   terminalSymbols.append('#')
   return terminalSymbols, nonTerminalSymbols
+
+# 项目集
+def getItemSet(grammar):
+  itemSet = []
+  for eachGrammar in grammar:
+    grammarItem = eachGrammar.split(' ')
+
+    for i in range(2, len(grammarItem) + 1):
+      itemSetItem = grammarItem[:i] + ['·'] + grammarItem[i:]
+      itemSet.append(itemSetItem)
+
+  return itemSet
