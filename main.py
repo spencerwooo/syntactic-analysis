@@ -1,6 +1,5 @@
-"""
-LR(1) 语法分析
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import parserUtils
 

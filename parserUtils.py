@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 # 从文件中读文法列表
 def readGrammar(filePath):
   grammar = []
