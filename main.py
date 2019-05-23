@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+自上而下的 LL(1) 分析器
+Top down: LL(1) parser
+"""
+
 import parserUtils
-
-
-def closure():
-  pass
-
-
-def goto():
-  pass
-
-
-def printAnalysisTable():
-  pass
 
 
 def main():
@@ -27,18 +20,17 @@ def main():
 
   # 读入文法
   grammar = parserUtils.readGrammar(grammarFilePath)
-  print('[Grammar]:')
-  print(grammar)
+  if (logLevel == 'verbose'):
+    print('[Grammar]:')
+    for grammaritem in grammar.items():
+      print(' ', grammaritem)
 
   # 划分终结符与非终结符
-  terminalSymbols, nonTerminalSymbols = parserUtils.differentiateSymbols(grammar)
+  terminalSymbols, nonTerminalSymbols = parserUtils.differentiateSymbols(
+      grammar)
   if (logLevel == 'verbose'):
-    print('[Terminal Symbols]:   ', terminalSymbols)
-    print('[Nonterminal Symbols]:', nonTerminalSymbols)
-
-  itemSet = parserUtils.getItemSet(grammar)
-  if (logLevel == 'verbose'):
-    print(itemSet)
+    print('[Terminal Symbols]:\n ', terminalSymbols)
+    print('[Nonterminal Symbols]:\n ', nonTerminalSymbols)
 
 
 if __name__ == "__main__":

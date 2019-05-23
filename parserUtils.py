@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import collections
+
 # 从文件中读文法列表
 def readGrammar(filePath):
-  grammar = []
+  grammar = collections.defaultdict(list)
   with open(filePath, 'r') as f:
-    # 按行读取，加入文法列表
+    # 按行读取，加入文法字典
     for line in f:
-      line = line.rstrip('\n')
-      grammar.append(line)
-  # 扩展文法
-  grammar.insert(0, grammar[0][0] + '` -> ' + grammar[0][0])
+      preGrammar, postGrammar = line.rstrip('\n').split('->')
+      preGrammar = preGrammar.rstrip(' ')
+      postGrammar = postGrammar.lstrip(' ').split('|')
+
+      for eachPostGrammar in postGrammar:
+        eachPostGrammar = eachPostGrammar.strip(' ').split(' ')
+        grammar[preGrammar].append(eachPostGrammar)
+
   return grammar
 
 # 区分终结符与非终结符
@@ -22,16 +28,14 @@ def differentiateSymbols(grammar):
 
   tempSymbols = []
 
-  for eachGrammar in grammar:
-    preGrammar, postGrammar = eachGrammar.split('->')
-    preGrammar = preGrammar.rstrip(' ')
+  for eachPreGrammar in grammar:
+    if eachPreGrammar not in nonTerminalSymbols:
+      nonTerminalSymbols.append(eachPreGrammar)
 
-    if preGrammar not in nonTerminalSymbols:
-      nonTerminalSymbols.append(preGrammar)
-
-    postGrammarList = postGrammar.lstrip(' ').split(' ')
+    postGrammarList = grammar[eachPreGrammar]
     for eachPostGrammar in postGrammarList:
-      tempSymbols.append(eachPostGrammar)
+      for eachPostGrammarItem in eachPostGrammar:
+        tempSymbols.append(eachPostGrammarItem)
 
   for eachTempSymbol in tempSymbols:
     if eachTempSymbol not in nonTerminalSymbols and eachTempSymbol not in terminalSymbols:
@@ -40,14 +44,10 @@ def differentiateSymbols(grammar):
   terminalSymbols.append('#')
   return terminalSymbols, nonTerminalSymbols
 
-# 项目集
-def getItemSet(grammar):
-  itemSet = []
-  for eachGrammar in grammar:
-    grammarItem = eachGrammar.split(' ')
+# 获取文法的 FIRST 集合
+def getFIRST(grammar, terminalSymbols, nonTerminalSymbols):
+  pass
 
-    for i in range(2, len(grammarItem) + 1):
-      itemSetItem = grammarItem[:i] + ['·'] + grammarItem[i:]
-      itemSet.append(itemSetItem)
-
-  return itemSet
+# 获取文法的 FOLLOW 集合
+def getFOLLOW(grammar, terminalSymbols, nonTerminalSymbols):
+  pass
