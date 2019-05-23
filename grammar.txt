@@ -1,5 +1,5 @@
-S -> L = R
-S -> R
-L -> * R
-L -> i
-R -> L
+token -> literal strange_token
+strange_token -> + literal strange_token | ε
+literal -> keyword strange_literal
+strange_literal -> * keyword strange_literal | ε
+keyword -> ( token ) | i
