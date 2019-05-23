@@ -3,8 +3,11 @@
 
 import collections
 
-# 从文件中读文法列表
+
 def readGrammar(filePath):
+  """
+  从文件中读文法列表
+  """
   grammar = collections.defaultdict(list)
   with open(filePath, 'r') as f:
     # 按行读取，加入文法字典
@@ -19,13 +22,16 @@ def readGrammar(filePath):
 
   return grammar
 
-# 区分终结符与非终结符
+
 def differentiateSymbols(grammar):
+  """
+  区分终结符与非终结符
+  """
   # 终结符
   terminalSymbols = []
   # 非终结符
   nonTerminalSymbols = []
-
+  # 中间处理符号
   tempSymbols = []
 
   for eachPreGrammar in grammar:
@@ -44,10 +50,26 @@ def differentiateSymbols(grammar):
   terminalSymbols.append('#')
   return terminalSymbols, nonTerminalSymbols
 
-# 获取文法的 FIRST 集合
-def getFIRST(grammar, terminalSymbols, nonTerminalSymbols):
-  pass
 
-# 获取文法的 FOLLOW 集合
+def getFIRST(grammar, terminalSymbols, nonTerminalSymbols):
+  """
+  获取文法的 FIRST 集合
+  """
+  firstSet = collections.defaultdict(list)
+  allSymbols = terminalSymbols + nonTerminalSymbols
+
+  for eachGrammar in grammar:
+    for eachPostGrammarItem in grammar[eachGrammar]:
+      if len(eachPostGrammarItem) == 1 and eachPostGrammarItem[0] in terminalSymbols:
+        firstSet[eachGrammar] = eachPostGrammarItem
+
+  return firstSet
+
+
 def getFOLLOW(grammar, terminalSymbols, nonTerminalSymbols):
-  pass
+  """
+  获取文法的 FOLLOW 集合
+  """
+  followSet = {}
+
+  return followSet

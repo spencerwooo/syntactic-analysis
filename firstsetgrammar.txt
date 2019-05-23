@@ -1,0 +1,3 @@
+S -> A p | B q
+A -> a | c A
+B -> b | d B
