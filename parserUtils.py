@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import copy
 
 
 def readGrammar(filePath):
@@ -51,25 +52,70 @@ def differentiateSymbols(grammar):
   return terminalSymbols, nonTerminalSymbols
 
 
-def getFIRST(grammar, terminalSymbols, nonTerminalSymbols):
+def getFIRST(firstSet, grammar, terminalSymbols, nonTerminalSymbols):
   """
   获取文法的 FIRST 集合
+  参考：https://blog.csdn.net/Cielyic/article/details/82941014
   """
-  firstSet = collections.defaultdict(list)
-  allSymbols = terminalSymbols + nonTerminalSymbols
-
   for eachGrammar in grammar:
-    for eachPostGrammarItem in grammar[eachGrammar]:
-      if len(eachPostGrammarItem) == 1 and eachPostGrammarItem[0] in terminalSymbols:
-        firstSet[eachGrammar] = eachPostGrammarItem
+    for eachPostGrammar in grammar[eachGrammar]:
+      # 例子中大写字母表示非终结符，小写字母表示终结符：
+      # 1. 遇到了终结符、产生式右侧子式首符号是终结符，直接加入（比如：A -> g D B）
+      if eachPostGrammar[0] in terminalSymbols:
+        if not eachPostGrammar[0] in firstSet[eachGrammar]:
+          firstSet[eachGrammar].append(eachPostGrammar[0])
+      # 2. 产生式右侧子式首符号，递归（比如：A -> B C c）
+      else:
+        for eachPostGrammarItem in eachPostGrammar:
+          if eachPostGrammarItem in terminalSymbols:
+            if not eachPostGrammarItem in firstSet[eachGrammar]:
+              firstSet[eachGrammar].append(eachPostGrammarItem)
+            break
+          elif 'ε' in firstSet[eachPostGrammarItem]:
+            for item in firstSet[eachPostGrammarItem]:
+              if not item in firstSet[eachGrammar]:
+                firstSet[eachGrammar].append(item)
+          else:
+            break
 
   return firstSet
 
 
-def getFOLLOW(grammar, terminalSymbols, nonTerminalSymbols):
+def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols):
   """
   获取文法的 FOLLOW 集合
   """
-  followSet = {}
+
+  for eachGrammarStartSymbols in grammar.keys():
+    for eachGrammar in grammar:
+      for eachPostGrammar in grammar[eachGrammar]:
+        if eachGrammarStartSymbols in eachPostGrammar:
+            index = eachPostGrammar.index(eachGrammarStartSymbols)
+            # 1. 产生式形如：S->aX，将集合 Follow(S) 中的所有元素加入 Follow(X) 中
+            if index == len(eachPostGrammar) - 1:
+              for item in followSet[eachGrammar]:
+                if not item in followSet[eachGrammarStartSymbols]:
+                  followSet[eachGrammarStartSymbols].append(item)
+            # 2. 产生式形如：S->aXb
+            else:
+              # 2.1 b 为终结符：将 b 加入 Follow(x) 中
+              if eachPostGrammar[index + 1] in terminalSymbols:
+                if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbols]:
+                  followSet[eachGrammarStartSymbols].append(eachPostGrammar[index + 1])
+              # 2.2 b 为非终结符，First(b) 中包含 ε：将集合 Follow(S) 中的所有元素加入 Follow(X) 中
+              elif 'ε' in firstSet[eachPostGrammar[index + 1]]:
+                for item in followSet[eachGrammar]:
+                  if not item in followSet[eachGrammarStartSymbols]:
+                    followSet[eachGrammarStartSymbols].append(item)
+              # 2.3 b 为非终结符，First(b) 中没有 ε：将集合 First(b) 中除了 ε 的所有元素加入 Follow(X) 中
+              else:
+                for item in firstSet[eachPostGrammar[index + 1]]:
+                  if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
+                    followSet[eachGrammarStartSymbols].append(item)
+
+            # # LOG: 每次分析后 Follow 集合的变化
+            # print('Follow:')
+            # for item in followSet.items():
+            #   print(' ', item)
 
   return followSet
