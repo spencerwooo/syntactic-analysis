@@ -42,12 +42,14 @@ def main():
 
   # 递归求 FIRST 集
   grammarFirstSet = collections.defaultdict(list)
-  grammarFirstSet = parserUtils.getFIRST(grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
+  grammarFirstSet = parserUtils.getFIRST(
+      grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
   while True:
     originalFirstSet = copy.deepcopy(grammarFirstSet)
     # 查看递归情况的 LOG
     # print(originalFirstSet)
-    grammarFirstSet = parserUtils.getFIRST(grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
+    grammarFirstSet = parserUtils.getFIRST(
+        grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
     if grammarFirstSet == originalFirstSet:
       break
   if (logLevel > 9):
@@ -59,11 +61,13 @@ def main():
   grammarTop = list(grammar.keys())[0]
   grammarFollowSet = collections.defaultdict(list, {grammarTop: ['#']})
 
-  grammarFollowSet = parserUtils.getFOLLOW(grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
+  grammarFollowSet = parserUtils.getFOLLOW(
+      grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
   while True:
     originalFollowSet = copy.deepcopy(grammarFollowSet)
     # print(originalFollowSet)
-    grammarFollowSet = parserUtils.getFOLLOW(grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
+    grammarFollowSet = parserUtils.getFOLLOW(
+        grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
     if grammarFollowSet == originalFollowSet:
       break
 
@@ -71,7 +75,6 @@ def main():
     print('[FOLLOW SET]:')
     for item in grammarFollowSet.items():
       print(' ', item)
-
 
 
 if __name__ == "__main__":

@@ -76,6 +76,9 @@ def getFIRST(firstSet, grammar, terminalSymbols, nonTerminalSymbols):
               if not item in firstSet[eachGrammar]:
                 firstSet[eachGrammar].append(item)
           else:
+            for item in firstSet[eachPostGrammarItem]:
+              if not item in firstSet[eachGrammar]:
+                firstSet[eachGrammar].append(item)
             break
 
   return firstSet
@@ -90,32 +93,38 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
     for eachGrammar in grammar:
       for eachPostGrammar in grammar[eachGrammar]:
         if eachGrammarStartSymbols in eachPostGrammar:
-            index = eachPostGrammar.index(eachGrammarStartSymbols)
-            # 1. 产生式形如：S->aX，将集合 Follow(S) 中的所有元素加入 Follow(X) 中
-            if index == len(eachPostGrammar) - 1:
-              for item in followSet[eachGrammar]:
-                if not item in followSet[eachGrammarStartSymbols]:
-                  followSet[eachGrammarStartSymbols].append(item)
-            # 2. 产生式形如：S->aXb
+          index = eachPostGrammar.index(eachGrammarStartSymbols)
+          lastItemIndex = len(eachPostGrammar) - 1
+          # 1. 产生式形如：S->aX，将集合 Follow(S) 中的所有元素加入 Follow(X) 中
+          if index == lastItemIndex:
+            for item in followSet[eachGrammar]:
+              if not item in followSet[eachGrammarStartSymbols]:
+                followSet[eachGrammarStartSymbols].append(item)
+          # 2. 产生式形如：S->aXb
+          else:
+            # 2.1 b 为终结符：将 b 加入 Follow(X) 中
+            if eachPostGrammar[index + 1] in terminalSymbols:
+              if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbols]:
+                followSet[eachGrammarStartSymbols].append(eachPostGrammar[index + 1])
+            # 2.2 b 为非终结符，但为最后一项。First(b) 中包含 ε：将集合 Follow(S) 中的所有元素加入 Follow(X) 中
             else:
-              # 2.1 b 为终结符：将 b 加入 Follow(x) 中
-              if eachPostGrammar[index + 1] in terminalSymbols:
-                if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbols]:
-                  followSet[eachGrammarStartSymbols].append(eachPostGrammar[index + 1])
-              # 2.2 b 为非终结符，First(b) 中包含 ε：将集合 Follow(S) 中的所有元素加入 Follow(X) 中
-              elif 'ε' in firstSet[eachPostGrammar[index + 1]]:
-                for item in followSet[eachGrammar]:
-                  if not item in followSet[eachGrammarStartSymbols]:
-                    followSet[eachGrammarStartSymbols].append(item)
-              # 2.3 b 为非终结符，First(b) 中没有 ε：将集合 First(b) 中除了 ε 的所有元素加入 Follow(X) 中
-              else:
-                for item in firstSet[eachPostGrammar[index + 1]]:
-                  if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
-                    followSet[eachGrammarStartSymbols].append(item)
-
-            # # LOG: 每次分析后 Follow 集合的变化
-            # print('Follow:')
-            # for item in followSet.items():
-            #   print(' ', item)
+              for i in range(index + 1, lastItemIndex + 1):
+                if eachPostGrammar[i] in terminalSymbols:
+                  if not eachPostGrammar[i] in followSet[eachGrammarStartSymbols]:
+                    followSet[eachGrammarStartSymbols].append(eachPostGrammar[i])
+                  break
+                elif 'ε' in firstSet[eachPostGrammar[i]]:
+                  for item in firstSet[eachPostGrammar[i]]:
+                    if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
+                      followSet[eachGrammarStartSymbols].append(item)
+                  if i == lastItemIndex:
+                    for item in followSet[eachGrammar]:
+                      if not item in followSet[eachGrammarStartSymbols]:
+                        followSet[eachGrammarStartSymbols].append(item)
+                else:
+                  for item in firstSet[eachPostGrammar[i]]:
+                    if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
+                      followSet[eachGrammarStartSymbols].append(item)
+                  break
 
   return followSet
