@@ -153,6 +153,10 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
 
 
 def getRuleFirstSet(preRule, postRule, terminalSymbols, nonTerminalSymbols, firstSet):
+  """
+  在生成 LL1 分析表的过程中需要求每一个产生式的 First
+  即：对于产生式 S -> AcD，我们需要求 First(AcD) 集合
+  """
   ruleFirstSet = []
   for eachRule in postRule:
     # 1. 遇到了终结符、产生式右侧子式首符号是终结符，直接加入（比如：A -> g D B）
@@ -189,7 +193,7 @@ def createAnalyzeTable(grammar, terminalSymbols, nonTerminalSymbols, firstSet, f
   """
   创建 LL1 分析表
   """
-  analyzeTable = collections.defaultdict(list)
+  analyzeTable = collections.defaultdict(dict)
 
   # 对每个文法的生成式 A -> γ
   for eachGrammar in grammar:
@@ -203,11 +207,13 @@ def createAnalyzeTable(grammar, terminalSymbols, nonTerminalSymbols, firstSet, f
       for eachTerminalSymbol in terminalSymbols:
         # 如果终结符在 First(γ) 里面，那么就加入 LL1 分析表
         if eachTerminalSymbol in postGrammarFirstSet:
-          analyzeTable[eachGrammar].append({eachTerminalSymbol: eachPostGrammar})
+          analyzeTable[eachGrammar].update(
+              {eachTerminalSymbol: eachPostGrammar})
       # 2. 如果 First(γ) 中含有空串，那么就把所有在 Follow(A) 集合中的终结符加入 LL1 分析表
       if 'ε' in postGrammarFirstSet:
         for eachTerminalSymbol in terminalSymbols:
           if eachTerminalSymbol in followSet[eachGrammar]:
-            analyzeTable[eachGrammar].append({eachTerminalSymbol: eachPostGrammar})
+            analyzeTable[eachGrammar].update(
+                {eachTerminalSymbol: eachPostGrammar})
 
   return analyzeTable

@@ -24,7 +24,7 @@ def main():
   -  5: Essential
   -  1: None
   """
-  logLevel = 10
+  logLevel = 5
 
   print('[INFO] Start parsing...')
 
@@ -87,9 +87,12 @@ def main():
   if (logLevel > 1):
     print('[ANALYZE TABLE]:')
     for item in analyzeTable.items():
-      print(item)
+      print(' ', item)
 
-  # parserGeneral.hello('World')
+  # 5. Demo: 分析一个串 i+i*i
+  inputString = 'i+i*i'
+  parserGeneral.parseInputString(
+      inputString, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
 
 
 if __name__ == "__main__":
