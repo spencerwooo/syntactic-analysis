@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+LL1 语法分析器工具库：parserUtils.py
+包含：
+- 读文法
+- 处理终结与非终结符号
+- 获得 First 和 Follow 集合
+上级：main.py
+"""
+
 import collections
 import copy
 
@@ -67,14 +76,17 @@ def getFIRST(firstSet, grammar, terminalSymbols, nonTerminalSymbols):
       # 2. 产生式右侧子式首符号，递归（比如：A -> B C c）
       else:
         for eachPostGrammarItem in eachPostGrammar:
+          # 遇到终结符就可以停啦
           if eachPostGrammarItem in terminalSymbols:
             if not eachPostGrammarItem in firstSet[eachGrammar]:
               firstSet[eachGrammar].append(eachPostGrammarItem)
             break
+          # 遇到 First 集合中含有空串的还要继续哦
           elif 'ε' in firstSet[eachPostGrammarItem]:
             for item in firstSet[eachPostGrammarItem]:
               if not item in firstSet[eachGrammar]:
                 firstSet[eachGrammar].append(item)
+          # 但是如果 First 集合没有空串就可以停下来啦
           else:
             for item in firstSet[eachPostGrammarItem]:
               if not item in firstSet[eachGrammar]:
@@ -88,7 +100,6 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
   """
   获取文法的 FOLLOW 集合
   """
-
   for eachGrammarStartSymbols in grammar.keys():
     for eachGrammar in grammar:
       for eachPostGrammar in grammar[eachGrammar]:
@@ -105,22 +116,29 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
             # 2.1 b 为终结符：将 b 加入 Follow(X) 中
             if eachPostGrammar[index + 1] in terminalSymbols:
               if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbols]:
-                followSet[eachGrammarStartSymbols].append(eachPostGrammar[index + 1])
-            # 2.2 b 为非终结符，但为最后一项。First(b) 中包含 ε：将集合 Follow(S) 中的所有元素加入 Follow(X) 中
+                followSet[eachGrammarStartSymbols].append(
+                    eachPostGrammar[index + 1])
+            # 2.2 b 为非终结符
             else:
+              # 从 b 开始往后扫描
               for i in range(index + 1, lastItemIndex + 1):
+                # 遇到终结符就可以停下来啦
                 if eachPostGrammar[i] in terminalSymbols:
                   if not eachPostGrammar[i] in followSet[eachGrammarStartSymbols]:
-                    followSet[eachGrammarStartSymbols].append(eachPostGrammar[i])
+                    followSet[eachGrammarStartSymbols].append(
+                        eachPostGrammar[i])
                   break
+                # 要看看 First 集合里面有没有空串，有的话就可以加入 Follow 啦
                 elif 'ε' in firstSet[eachPostGrammar[i]]:
                   for item in firstSet[eachPostGrammar[i]]:
                     if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
                       followSet[eachGrammarStartSymbols].append(item)
+                  # 如果扫描到最后一项，First 集合里面还有空串，就要把集合 Follow(S) 中的所有元素加入 Follow(X) 中哦
                   if i == lastItemIndex:
                     for item in followSet[eachGrammar]:
                       if not item in followSet[eachGrammarStartSymbols]:
                         followSet[eachGrammarStartSymbols].append(item)
+                # 如果没有空串，把这一项的 First 集合里除了空串以为的内容加入 Follow 集合就可以停下来啦
                 else:
                   for item in firstSet[eachPostGrammar[i]]:
                     if not item in followSet[eachGrammarStartSymbols] and item != 'ε':

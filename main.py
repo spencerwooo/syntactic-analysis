@@ -4,12 +4,17 @@
 """
 自上而下的 LL(1) 分析器
 Top down: LL(1) parser
+主控程序：main.py
+下级程序：
+- 工具库：parserUtils.py
+- 输入串处理：parserGeneral.py
 """
 
 import collections
 import copy
 
 import parserUtils
+import parserGeneral
 
 
 def main():
@@ -76,6 +81,7 @@ def main():
     for item in grammarFollowSet.items():
       print(' ', item)
 
+  parserGeneral.hello('World')
 
 if __name__ == "__main__":
   main()

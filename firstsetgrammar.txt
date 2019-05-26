@@ -1,5 +1,5 @@
-A -> B C c | g D B
-B -> b C D E | ε
-C -> D a B | c a
-D -> d D | ε
-E -> g A f | c
+E -> T E`
+E` -> + T E` | ε
+T -> F T`
+T` -> * F T` | ε
+F -> ( E ) | i
