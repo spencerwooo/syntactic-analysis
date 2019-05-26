@@ -17,18 +17,18 @@ def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyz
   input = input + '#'
   # 开始分析
   i = 0
-  print(parseStack, input[i])
+  print('{0: >30}'.format(str(parseStack)), input[i])
   while True:
     if parseStack[-1] in terminalSymbols and input[i] in terminalSymbols:
       if parseStack[-1] == '#' and input[i] == '#':
-        print('Success!')
+        print('[INFO] Parse Success!')
         break
       elif parseStack[-1] == input[i] and input[i] != '#':
         parseStack.pop()
-        print(parseStack, input[i])
+        print('{0: >30}'.format(str(parseStack)), '-')
         i = i + 1
       else:
-        print('Failed!')
+        print('[ERROR] Parse Failed!')
         break
     elif parseStack[-1] in nonTerminalSymbols:
       row = analyzeTable[parseStack[-1]]
@@ -38,6 +38,6 @@ def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyz
           if item != 'ε':
             parseStack.append(item)
       else:
-        print('Parse failed.')
+        print('[ERROR] Parse failed.')
         break
-      print(parseStack, input[i])
+      print('{0: >30}'.format(str(parseStack)), input[i], row[input[i]])
