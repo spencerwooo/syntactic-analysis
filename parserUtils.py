@@ -58,6 +58,7 @@ def differentiateSymbols(grammar):
       terminalSymbols.append(eachTempSymbol)
 
   terminalSymbols.append('#')
+  terminalSymbols.remove('ε')
   return terminalSymbols, nonTerminalSymbols
 
 
@@ -71,6 +72,9 @@ def getFIRST(firstSet, grammar, terminalSymbols, nonTerminalSymbols):
       # 例子中大写字母表示非终结符，小写字母表示终结符：
       # 1. 遇到了终结符、产生式右侧子式首符号是终结符，直接加入（比如：A -> g D B）
       if eachPostGrammar[0] in terminalSymbols:
+        if not eachPostGrammar[0] in firstSet[eachGrammar]:
+          firstSet[eachGrammar].append(eachPostGrammar[0])
+      elif eachPostGrammar[0] == 'ε':
         if not eachPostGrammar[0] in firstSet[eachGrammar]:
           firstSet[eachGrammar].append(eachPostGrammar[0])
       # 2. 产生式右侧子式首符号，递归（比如：A -> B C c）
@@ -100,23 +104,23 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
   """
   获取文法的 FOLLOW 集合
   """
-  for eachGrammarStartSymbols in grammar.keys():
+  for eachGrammarStartSymbol in grammar.keys():
     for eachGrammar in grammar:
       for eachPostGrammar in grammar[eachGrammar]:
-        if eachGrammarStartSymbols in eachPostGrammar:
-          index = eachPostGrammar.index(eachGrammarStartSymbols)
+        if eachGrammarStartSymbol in eachPostGrammar:
+          index = eachPostGrammar.index(eachGrammarStartSymbol)
           lastItemIndex = len(eachPostGrammar) - 1
           # 1. 产生式形如：S->aX，将集合 Follow(S) 中的所有元素加入 Follow(X) 中
           if index == lastItemIndex:
             for item in followSet[eachGrammar]:
-              if not item in followSet[eachGrammarStartSymbols]:
-                followSet[eachGrammarStartSymbols].append(item)
+              if not item in followSet[eachGrammarStartSymbol]:
+                followSet[eachGrammarStartSymbol].append(item)
           # 2. 产生式形如：S->aXb
           else:
             # 2.1 b 为终结符：将 b 加入 Follow(X) 中
             if eachPostGrammar[index + 1] in terminalSymbols:
-              if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbols]:
-                followSet[eachGrammarStartSymbols].append(
+              if not eachPostGrammar[index + 1] in followSet[eachGrammarStartSymbol]:
+                followSet[eachGrammarStartSymbol].append(
                     eachPostGrammar[index + 1])
             # 2.2 b 为非终结符
             else:
@@ -124,25 +128,86 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
               for i in range(index + 1, lastItemIndex + 1):
                 # 遇到终结符就可以停下来啦
                 if eachPostGrammar[i] in terminalSymbols:
-                  if not eachPostGrammar[i] in followSet[eachGrammarStartSymbols]:
-                    followSet[eachGrammarStartSymbols].append(
+                  if not eachPostGrammar[i] in followSet[eachGrammarStartSymbol]:
+                    followSet[eachGrammarStartSymbol].append(
                         eachPostGrammar[i])
                   break
                 # 要看看 First 集合里面有没有空串，有的话就可以加入 Follow 啦
                 elif 'ε' in firstSet[eachPostGrammar[i]]:
                   for item in firstSet[eachPostGrammar[i]]:
-                    if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
-                      followSet[eachGrammarStartSymbols].append(item)
+                    if not item in followSet[eachGrammarStartSymbol] and item != 'ε':
+                      followSet[eachGrammarStartSymbol].append(item)
                   # 如果扫描到最后一项，First 集合里面还有空串，就要把集合 Follow(S) 中的所有元素加入 Follow(X) 中哦
                   if i == lastItemIndex:
                     for item in followSet[eachGrammar]:
-                      if not item in followSet[eachGrammarStartSymbols]:
-                        followSet[eachGrammarStartSymbols].append(item)
+                      if not item in followSet[eachGrammarStartSymbol]:
+                        followSet[eachGrammarStartSymbol].append(item)
                 # 如果没有空串，把这一项的 First 集合里除了空串以为的内容加入 Follow 集合就可以停下来啦
                 else:
                   for item in firstSet[eachPostGrammar[i]]:
-                    if not item in followSet[eachGrammarStartSymbols] and item != 'ε':
-                      followSet[eachGrammarStartSymbols].append(item)
+                    if not item in followSet[eachGrammarStartSymbol] and item != 'ε':
+                      followSet[eachGrammarStartSymbol].append(item)
                   break
 
   return followSet
+
+
+def getRuleFirstSet(preRule, postRule, terminalSymbols, nonTerminalSymbols, firstSet):
+  ruleFirstSet = []
+  for eachRule in postRule:
+    # 1. 遇到了终结符、产生式右侧子式首符号是终结符，直接加入（比如：A -> g D B）
+    if eachRule in terminalSymbols:
+      if not eachRule in ruleFirstSet:
+        ruleFirstSet.append(eachRule)
+      break
+    elif eachRule == 'ε':
+      if not eachRule in ruleFirstSet:
+        ruleFirstSet.append(eachRule)
+      break
+    # 2. 产生式右侧子式首符号，递归（比如：A -> B C c）
+    else:
+      # 遇到终结符就可以停啦
+      if eachRule in terminalSymbols:
+        if not eachRule in ruleFirstSet:
+          ruleFirstSet.append(eachRule)
+        break
+      # 遇到 First 集合中含有空串的还要继续哦
+      elif 'ε' in firstSet[eachRule]:
+        for item in firstSet[eachRule]:
+          if not item in ruleFirstSet:
+            ruleFirstSet.append(item)
+      # 但是如果 First 集合没有空串就可以停下来啦
+      else:
+        for item in firstSet[eachRule]:
+          if not item in ruleFirstSet:
+            ruleFirstSet.append(item)
+        break
+  return ruleFirstSet
+
+
+def createAnalyzeTable(grammar, terminalSymbols, nonTerminalSymbols, firstSet, followSet):
+  """
+  创建 LL1 分析表
+  """
+  analyzeTable = collections.defaultdict(list)
+
+  # 对每个文法的生成式 A -> γ
+  for eachGrammar in grammar:
+    for eachPostGrammar in grammar[eachGrammar]:
+      # 先求一个 First(γ)
+      postGrammarFirstSet = getRuleFirstSet(
+          eachGrammar, eachPostGrammar, terminalSymbols, nonTerminalSymbols, firstSet)
+      # print(eachPostGrammar, postGrammarFirstSet)
+
+      # 1. 对每个终结符：
+      for eachTerminalSymbol in terminalSymbols:
+        # 如果终结符在 First(γ) 里面，那么就加入 LL1 分析表
+        if eachTerminalSymbol in postGrammarFirstSet:
+          analyzeTable[eachGrammar].append({eachTerminalSymbol: eachPostGrammar})
+      # 2. 如果 First(γ) 中含有空串，那么就把所有在 Follow(A) 集合中的终结符加入 LL1 分析表
+      if 'ε' in postGrammarFirstSet:
+        for eachTerminalSymbol in terminalSymbols:
+          if eachTerminalSymbol in followSet[eachGrammar]:
+            analyzeTable[eachGrammar].append({eachTerminalSymbol: eachPostGrammar})
+
+  return analyzeTable

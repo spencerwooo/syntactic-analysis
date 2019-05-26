@@ -31,21 +31,21 @@ def main():
   # 文法文件路径
   grammarFilePath = 'firstsetgrammar.txt'
 
-  # 读入文法
+  # 1. 读入文法
   grammar = parserUtils.readGrammar(grammarFilePath)
   if (logLevel > 1):
     print('[Grammar]:')
     for grammaritem in grammar.items():
       print(' ', grammaritem)
 
-  # 划分终结符与非终结符
+  # 2. 划分终结符与非终结符
   terminalSymbols, nonTerminalSymbols = parserUtils.differentiateSymbols(
       grammar)
   if (logLevel > 9):
     print('[Terminal Symbols]:\n ', terminalSymbols)
     print('[Nonterminal Symbols]:\n ', nonTerminalSymbols)
 
-  # 递归求 FIRST 集
+  # 3-1. 递归求 FIRST 集
   grammarFirstSet = collections.defaultdict(list)
   grammarFirstSet = parserUtils.getFIRST(
       grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
@@ -62,7 +62,7 @@ def main():
     for item in grammarFirstSet.items():
       print(' ', item)
 
-  # 递归求 FOLLOW 集
+  # 3-2. 递归求 FOLLOW 集
   grammarTop = list(grammar.keys())[0]
   grammarFollowSet = collections.defaultdict(list, {grammarTop: ['#']})
 
@@ -81,7 +81,16 @@ def main():
     for item in grammarFollowSet.items():
       print(' ', item)
 
-  parserGeneral.hello('World')
+  # 4. 创建 LL1 分析表
+  analyzeTable = parserUtils.createAnalyzeTable(
+      grammar, terminalSymbols, nonTerminalSymbols, grammarFirstSet, grammarFollowSet)
+  if (logLevel > 1):
+    print('[ANALYZE TABLE]:')
+    for item in analyzeTable.items():
+      print(item)
+
+  # parserGeneral.hello('World')
+
 
 if __name__ == "__main__":
   main()
