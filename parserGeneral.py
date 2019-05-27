@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import xml.etree.ElementTree as ET
+from anytree import Node, RenderTree
 
 
 def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
@@ -49,14 +50,11 @@ def createParserTree(inputToken, grammar, terminalSymbols, nonTerminalSymbols, a
   """
   开始了！分析树！
   """
-  xmlTree = ET.Element('root', {
-    'name': 'input.tree.xml'
-  })
-  xmlTokens = ET.SubElement(xmlTree, '')
-
   parseStack = ['#']
   grammarTop = list(grammar.keys())[0]
   parseStack.append(grammarTop)
+
+  tree = Node(grammarTop)
 
   i = 0
   print(parseStack, inputToken[i][1].text)

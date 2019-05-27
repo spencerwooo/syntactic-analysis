@@ -3,9 +3,10 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{multirow}
-\usepackage{verbatim}
+\usepackage{listings}
 \usepackage{subcaption}
 \usepackage{tabu}
+\usepackage[T1]{fontenc}
 \usepackage{booktabs}
 \usepackage{minted}
 \usemintedstyle{manni}
@@ -15,6 +16,11 @@
 \definecolor{lightergray}{gray}{0.95}
 \setlength{\tabcolsep}{12pt}
 \renewcommand{\arraystretch}{1}
+\lstset{
+basicstyle=\ttfamily,
+columns=flexible,
+breaklines=true
+}
 
 \begin{document}
 \begin{titlepage}
@@ -56,9 +62,116 @@
 \end{enumerate}
 
 \section{实验的具体过程步骤}
+\subsection{项目整体架构设计}
+本次语法分析实验是在上一个词法分析实验的基础之上进行的，我们的大致要求是将词法分析得到的 Token 文件读入，作为语法分析的输入串，在通过语法分析器之后得到相应的语法树。经过考虑，我决定使用自顶向下的 LL(1) 语法分析方法。
+
+LL(1) 语法分析器的具体架构是这样的：
+
+\begin{itemize}
+  \item 文法输入模块
+  \item LL(1) 主控程序
+  \begin{itemize}
+    \item First 集合求解模块
+    \item Follow 集合求解模块
+    \item LL(1) 分析表构造模块
+  \end{itemize}
+  \item 输入串分析模块
+\end{itemize}
+
+为了和 BIT-MiniCC 框架进行结合，我们需要读入词法分析 Token 的 XML 文件作为我们的输入。同时我们需要输出符合规范的抽象语法树对应的 XML 文件作为下一步的输入。
+
+我本次项目选择使用 Python 进行实现。我设计了：
+
+\begin{itemize}
+  \item \texttt{main.py}：LL(1) 分析器的主控程序，调用下面两个模块
+  \item \texttt{parserUtils.py}：LL(1) 分析器的工具类，包含了对文法的读入、分析、First 和 Follow 集合的求取以及 LL(1) 分析表的求取等工具
+  \item \texttt{parserGeneral.py}：LL(1) 分析器的主要模块，通过读入 Token 文件以及 LL(1) 分析表，得到语法分析树，并输出为合法的 XML 文件
+\end{itemize}
+
+这三个主要模块，构成了全部的 LL(1) 分析器。程序大致的流程如下图 \ref{fig:figure1}：
+
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/ll1.png}
+  \caption{LL(1) 分析器的大致工作流程}
+  \label{fig:figure1}
+\end{figure}
+
+\subsection{各个模块的具体实现}
+接下来，我对每个模块的具体实现一一进行介绍。
+
+\subsubsection{定义文法}
+本次实验中，我在实验要求的文法基础之上，进行了一些扩展，增加了 C 语言中“声明语句”、“循环语句”、“判断语句”以及“跳转语句”的定义。同时，我也适当修改了原有的文法，包括对变量的声明、外部函数等等内容。本次实验中我所采用的全部文法如下所示：
+
+\begin{lstlisting}
+TRANSLATION_UNIT -> FUNCTION_DEFINITION
+FUNCTION_DEFINITION -> TYPE_SPECIFIER identifier ( PARAM_LIST ) CODE_BLOCK
+PARAM_LIST -> ARGUMENT | ARGUMENT , PARAM_LIST | empty
+ARGUMENT -> TYPE_SPECIFIER identifier
+TYPE_SPECIFIER -> int | float | short | long | void | double | char
+CODE_BLOCK -> { STATEMENT_LIST }
+STATEMENT_LIST -> STATEMENT STATEMENT_LIST | empty
+STATEMENT -> DECLARATION_STATEMENT | ASSIGN_STATEMENT | RETURN_STATEMENT | LOOP_STATEMENT | SELECT_STATEMENT
+DECLARATION_STATEMENT -> TYPE_SPECIFIER identifier ; | TYPE_SPECIFIER ASSIGN_STATEMENT
+ASSIGN_STATEMENT -> identifier ASSIGN_OPERATOR EXPRESSION ;
+ASSIGN_OPERATOR -> = | += | -= | *= | /= | ^= | %= | &=
+RETURN_STATEMENT -> return EXPRESSION ;
+JUMP_STATEMENT -> continue ; | break ; | goto identifier ;
+LOOP_STATEMENT -> for ( EXPRESSION ; EXPRESSION ; EXPRESSION ) CODE_BLOCK | while ( EXPRESSION ) CODE_BLOCK | do CODE_BLOCK while ( EXPRESSION ) ;
+SELECT_STATEMENT -> if ( EXPRESSION ) CODE_BLOCK | if ( EXPRESSION ) CODE_BLOCK else CODE_BLOCK | switch ( EXPRESSION ) CODE_BLOCK
+EXPRESSION -> TERM EXPRESSION2 | empty
+EXPRESSION2 -> + TERM EXPRESSION2 | - TERM EXPRESSION2 | empty
+TERM -> FACTOR TERM2
+TERM2 -> * FACTOR TERM2 | / FACTOR TERM2 | empty
+FACTOR -> identifier | CONSTANT | ( EXPRESSION )
+CONSTANT -> integer_constant | floating_constant | char | string
+\end{lstlisting}
+
+\subsubsection{输入文法，并以字典的形式存储}
+为了方便存储文法，以 \texttt{FACTOR -> identifier | CONSTANT | (EXPRESSION)} 为例子，我按照如下的形式存储文法：
+
+\begin{verbatim}
+{
+  'FACTOR': [['identifier'], ['CONSTANT'], ['(', 'EXPRESSION', ')']}
+}
+\end{verbatim}
+
+可以看到，我将文法产生式左侧非终结符作为字典的 key，将相应的 value 定为文法后缀的生成式列表。我以 “\texttt{|}” 区分不同的生成式，这样就能够很好的对文法进行分析处理了。
+
+相应的，在 Python 中，我使用了下面的方式对文法 \texttt{grammar} 进行初始化：
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+grammar = collections.defaultdict(list)
+\end{minted}
+
+之后，按行读入文法，并处理，最后得到“字典嵌套列表”的一个数据结构。
+
+\subsubsection{处理终结符与非终结符}
+对输入的文法进行遍历获取终结符与非终结符列表相对简单，只需要将文法生成式的前部加入非终结符集合，再遍历文法的后缀，如果遇到了不在非终结符集合中的符号，直接加入终结符集合即可。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def differentiateSymbols(grammar):
+  # ...
+  return terminalSymbols, nonTerminalSymbols
+\end{minted}
+
+通过上面两个步骤，我们已经成功的得到了文法的具体内容、文法的终结符与非终结符集合。这样，我们就可以利用这三个集合，通过接下来的算法构造 LL(1) 分析表。
+
+\subsubsection{获取文法的 First 与 Follow 集合}
+
+\subsubsection{得到相应的 LL(1) 分析表}
+
+\subsubsection{处理输入 Token，得到分析树}
 
 \section{运行效果}
+\subsection{语法树的生成}
+
+\subsection{得到抽象语法树的 XML 表示}
 
 \section{实验心得体会}
+通过本次实验，我不仅更加熟悉了语法分析的具体过程，对自上而下的语法分析过程更加了解，还对 C 语言的文法描述、LL(1) 分析法的具体过程以及通过 LL(1) 分析表处理输入串的过程有了全新的认识。我在本次实验中，通过自己的扩展，处理得到了一个相对清晰的 C 语言 LL(1) 文法子集，利用 Python 构建了 C 语言的语法分析器，并成功的通过 LL(1) 分析器得到了一段 C 语言代码的语法分析树。
+
+在本次实验中，我遇到最大的难题是对文法的处理。只有选取合适的数据结构，我才能更加方便的处理 C 语言的文法集合，也更加方便后续利用 LL(1) 分析表构建语法分析树的遍历过程。
+
+与此同时，我通过本次实验的学习，还对 LL(1) 语法分析法、递归下降分析法以及 LR 语法分析法都有了全新的了解。总体来说，我收获颇丰。
 
 \end{document}
