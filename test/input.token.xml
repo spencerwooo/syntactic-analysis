@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="input.c">
+<project name="test.c">
   <tokens>
     <token>
       <numbers>1</numbers>
@@ -53,14 +53,14 @@
     <token>
       <numbers>8</numbers>
       <value>=</value>
-      <keyword>unary operator</keyword>
+      <keyword>unary_operator</keyword>
       <line>2</line>
       <true>true</true>
     </token>
     <token>
       <numbers>9</numbers>
       <value>1</value>
-      <keyword>integer constant</keyword>
+      <keyword>integer_constant</keyword>
       <line>2</line>
       <true>true</true>
     </token>
@@ -81,7 +81,7 @@
     <token>
       <numbers>12</numbers>
       <value>=</value>
-      <keyword>unary operator</keyword>
+      <keyword>unary_operator</keyword>
       <line>3</line>
       <true>true</true>
     </token>
@@ -95,14 +95,14 @@
     <token>
       <numbers>14</numbers>
       <value>*</value>
-      <keyword>unary operator</keyword>
+      <keyword>unary_operator</keyword>
       <line>3</line>
       <true>true</true>
     </token>
     <token>
       <numbers>15</numbers>
       <value>2</value>
-      <keyword>integer constant</keyword>
+      <keyword>integer_constant</keyword>
       <line>3</line>
       <true>true</true>
     </token>
@@ -115,37 +115,184 @@
     </token>
     <token>
       <numbers>17</numbers>
-      <value>return</value>
+      <value>if</value>
       <keyword>keyword</keyword>
       <line>4</line>
       <true>true</true>
     </token>
     <token>
       <numbers>18</numbers>
+      <value>(</value>
+      <keyword>delimiter</keyword>
+      <line>4</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>19</numbers>
       <value>a</value>
       <keyword>identifier</keyword>
       <line>4</line>
       <true>true</true>
     </token>
     <token>
-      <numbers>19</numbers>
-      <value>;</value>
+      <numbers>20</numbers>
+      <value>)</value>
       <keyword>delimiter</keyword>
       <line>4</line>
       <true>true</true>
     </token>
     <token>
-      <numbers>20</numbers>
-      <value>}</value>
+      <numbers>21</numbers>
+      <value>{</value>
+      <keyword>delimiter</keyword>
+      <line>4</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>22</numbers>
+      <value>a</value>
+      <keyword>identifier</keyword>
+      <line>5</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>23</numbers>
+      <value>=</value>
+      <keyword>unary_operator</keyword>
+      <line>5</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>24</numbers>
+      <value>a</value>
+      <keyword>identifier</keyword>
+      <line>5</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>25</numbers>
+      <value>/</value>
+      <keyword>unary_operator</keyword>
+      <line>5</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>26</numbers>
+      <value>1</value>
+      <keyword>integer_constant</keyword>
+      <line>5</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>27</numbers>
+      <value>;</value>
       <keyword>delimiter</keyword>
       <line>5</line>
       <true>true</true>
     </token>
     <token>
-      <numbers>21</numbers>
-      <value>#</value>
-      <keyword>end of file</keyword>
+      <numbers>28</numbers>
+      <value>}</value>
+      <keyword>delimiter</keyword>
       <line>6</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>29</numbers>
+      <value>else</value>
+      <keyword>keyword</keyword>
+      <line>6</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>30</numbers>
+      <value>{</value>
+      <keyword>delimiter</keyword>
+      <line>6</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>31</numbers>
+      <value>a</value>
+      <keyword>identifier</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>32</numbers>
+      <value>=</value>
+      <keyword>unary_operator</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>33</numbers>
+      <value>a</value>
+      <keyword>identifier</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>34</numbers>
+      <value>-</value>
+      <keyword>unary_operator</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>35</numbers>
+      <value>1</value>
+      <keyword>integer_constant</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>36</numbers>
+      <value>;</value>
+      <keyword>delimiter</keyword>
+      <line>7</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>37</numbers>
+      <value>}</value>
+      <keyword>delimiter</keyword>
+      <line>8</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>38</numbers>
+      <value>return</value>
+      <keyword>keyword</keyword>
+      <line>9</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>39</numbers>
+      <value>a</value>
+      <keyword>identifier</keyword>
+      <line>9</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>40</numbers>
+      <value>;</value>
+      <keyword>delimiter</keyword>
+      <line>9</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>41</numbers>
+      <value>}</value>
+      <keyword>delimiter</keyword>
+      <line>10</line>
+      <true>true</true>
+    </token>
+    <token>
+      <numbers>42</numbers>
+      <value>#</value>
+      <keyword>end_of_file</keyword>
+      <line>10</line>
       <true>true</true>
     </token>
   </tokens>

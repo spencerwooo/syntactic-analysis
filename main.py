@@ -12,9 +12,24 @@ Top down: LL(1) parser
 
 import collections
 import copy
+import os
+import xml.etree.ElementTree as ET
 
 import parserUtils
 import parserGeneral
+
+
+def readToken(filePath):
+  """
+  读入 Token XML 中的内容
+  """
+  inputTokenList = []
+
+  tokenRoot = ET.parse(filePath).getroot()
+  tokens = tokenRoot[0]
+  for i in range(0, len(tokens)):
+    inputTokenList.append(tokens[i])
+  return inputTokenList
 
 
 def main():
@@ -24,12 +39,12 @@ def main():
   -  5: Essential
   -  1: None
   """
-  logLevel = 5
+  logLevel = 1
 
   print('[INFO] Start parsing...')
 
   # 文法文件路径
-  grammarFilePath = 'firstsetgrammar.txt'
+  grammarFilePath = 'grammar.txt'
 
   # 1. 读入文法
   grammar = parserUtils.readGrammar(grammarFilePath)
@@ -90,9 +105,15 @@ def main():
       print(' ', item)
 
   # 5. Demo: 分析一个串 i+i*i
-  inputString = 'i+i*i'
-  parserGeneral.parseInputString(
-      inputString, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
+  # inputString = 'i+i*i'
+  # parserGeneral.parseInputString(
+  #     inputString, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
+
+  # 分析输入 Token 文件
+  tokenFilePath = os.path.join('test', 'input.token.xml')
+  tokenList = readToken(tokenFilePath)
+  parserGeneral.createParserTree(
+      tokenList, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
 
 
 if __name__ == "__main__":

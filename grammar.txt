@@ -1,5 +1,21 @@
-token -> literal strange_token
-strange_token -> + literal strange_token | ε
-literal -> keyword strange_literal
-strange_literal -> * keyword strange_literal | ε
-keyword -> ( token ) | i
+TRANSLATION_UNIT -> FUNCTION_DEFINITION
+FUNCTION_DEFINITION -> TYPE_SPECIFIER identifier ( PARAM_LIST ) CODE_BLOCK
+PARAM_LIST -> ARGUMENT | ARGUMENT , PARAM_LIST | ε
+ARGUMENT -> TYPE_SPECIFIER identifier
+TYPE_SPECIFIER -> int | float | short | long | void | double | char
+CODE_BLOCK -> { STATEMENT_LIST }
+STATEMENT_LIST -> STATEMENT STATEMENT_LIST | ε
+STATEMENT -> DECLARATION_STATEMENT | ASSIGN_STATEMENT | RETURN_STATEMENT | LOOP_STATEMENT | SELECT_STATEMENT
+DECLARATION_STATEMENT -> TYPE_SPECIFIER identifier ; | TYPE_SPECIFIER ASSIGN_STATEMENT
+ASSIGN_STATEMENT -> identifier ASSIGN_OPERATOR EXPRESSION ;
+ASSIGN_OPERATOR -> = | += | -= | *= | /= | ^= | %= | &=
+RETURN_STATEMENT -> return EXPRESSION ;
+JUMP_STATEMENT -> continue ; | break ; | goto identifier ;
+LOOP_STATEMENT -> for ( EXPRESSION ; EXPRESSION ; EXPRESSION ) CODE_BLOCK | while ( EXPRESSION ) CODE_BLOCK | do CODE_BLOCK while ( EXPRESSION ) ;
+SELECT_STATEMENT -> if ( EXPRESSION ) CODE_BLOCK | if ( EXPRESSION ) CODE_BLOCK else CODE_BLOCK | switch ( EXPRESSION ) CODE_BLOCK
+EXPRESSION -> TERM EXPRESSION2 | ε
+EXPRESSION2 -> + TERM EXPRESSION2 | - TERM EXPRESSION2 | ε
+TERM -> FACTOR TERM2
+TERM2 -> * FACTOR TERM2 | / FACTOR TERM2 | ε
+FACTOR -> identifier | CONSTANT | ( EXPRESSION )
+CONSTANT -> integer_constant | floating_constant | char | string

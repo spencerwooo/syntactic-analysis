@@ -58,7 +58,8 @@ def differentiateSymbols(grammar):
       terminalSymbols.append(eachTempSymbol)
 
   terminalSymbols.append('#')
-  terminalSymbols.remove('ε')
+  if 'ε' in terminalSymbols:
+    terminalSymbols.remove('ε')
   return terminalSymbols, nonTerminalSymbols
 
 
