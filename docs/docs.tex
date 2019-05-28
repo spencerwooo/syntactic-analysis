@@ -145,6 +145,19 @@ grammar = collections.defaultdict(list)
 
 之后，按行读入文法，并处理，最后得到“字典嵌套列表”的一个数据结构。
 
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+with open(filePath, 'r') as f:
+    # 按行读取，加入文法字典
+    for line in f:
+      preGrammar, postGrammar = line.rstrip('\n').split('->')
+      preGrammar = preGrammar.rstrip(' ')
+      postGrammar = postGrammar.lstrip(' ').split('|')
+
+      for eachPostGrammar in postGrammar:
+        eachPostGrammar = eachPostGrammar.strip(' ').split(' ')
+        grammar[preGrammar].append(eachPostGrammar)
+\end{minted}
+
 \subsubsection{处理终结符与非终结符}
 对输入的文法进行遍历获取终结符与非终结符列表相对简单，只需要将文法生成式的前部加入非终结符集合，再遍历文法的后缀，如果遇到了不在非终结符集合中的符号，直接加入终结符集合即可。
 
@@ -157,6 +170,83 @@ def differentiateSymbols(grammar):
 通过上面两个步骤，我们已经成功的得到了文法的具体内容、文法的终结符与非终结符集合。这样，我们就可以利用这三个集合，通过接下来的算法构造 LL(1) 分析表。
 
 \subsubsection{获取文法的 First 与 Follow 集合}
+\paragraph{First 集合}
+首先，我们对文法的每一项非终结符求取其 First 集合。First 集合是非终结符（或终结符、空符号串等等）的开始符号集合。对于文法 G 来说，G 中的 $\forall \alpha \in V^*$ 终结首符号集合 $FIRST(\alpha)$ 为：
+
+\begin{equation}
+  FIRST(\alpha) = \{a | \alpha^* \implies a, a \in V_T\}
+\end{equation}
+
+若 $a^* \implies \epsilon$，则 $\epsilon \in FIRST(\alpha)$。
+
+在求取 First 集合时，我们是通过下面大致的代码描述进行求取的。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def getFIRST(firstSet, grammar, terminalSymbols, nonTerminalSymbols):
+  for eachGrammar in grammar:
+    for eachPostGrammar in grammar[eachGrammar]:
+      # 1. 遇到了终结符、产生式右侧子式首符号是终结符，直接加入
+      if ...
+      # 2. 产生式右侧子式首符号，递归求取（比如：A -> B C c）
+      else ...
+  return firstSet
+\end{minted}
+
+为了保证 First 集合的完整性，我们需要递归多次求取文法的 First 集合。在主控程序循环求取 First 集合，直到两次求得的 First 集合相同即可停止。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+grammarFirstSet = collections.defaultdict(list)
+grammarFirstSet = parserUtils.getFIRST(
+    grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
+while True:
+  originalFirstSet = copy.deepcopy(grammarFirstSet)
+  grammarFirstSet = parserUtils.getFIRST(
+      grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
+  if grammarFirstSet == originalFirstSet:
+    break
+\end{minted}
+
+\paragraph{Follow 集合}
+在上一步骤 First 集合的基础之上，我们求取 Follow 集合。Follow 集合是对于文法 G 的所有句型中能够紧跟在非终结符号后面的一切终结符号（或者“\#”）。对上下文无关文法 G 来说，S 是文法的开始符号，对于文法 G 的任何非终结符号 A：
+
+\begin{equation}
+  FOLLOW(A) = \{ a | S^* \implies \dots Aa \dots, a \in V_T^* \}
+\end{equation}
+
+若 $S^* \implies \dots A$，则 $\# \in FOLLOW(A)$。
+
+我们在构造 Follow 集合时，采用下面描述的算法：
+
+\noindent\fbox{%
+  \parbox{\linewidth}{%
+对文法 G 中每个 $A \in V_N$：
+
+\begin{enumerate}
+  \item 对 G 的开始符号 S，令 $\# \in FOLLOW(S)$
+  \item 如果文法 G 中出现了形如 $B \rightarrow \alpha A\beta$ 的产生式，且 $\beta \neq \epsilon$，则将 $FIRST(\beta)$ 中除了 $\epsilon$ 的符号全部加入 FOLLOW(A) 中
+  \item 如果文法 G 中出现了形如 $B \rightarrow \alpha A$，或 $B \rightarrow \alpha A \beta$ 且 $\epsilon \in FIRST(\beta)$ 的产生式，则将 FOLLOW(B) 中全部内容加入 FOLLOW(A) 中
+\end{enumerate}
+  }%
+}
+
+在具体的代码实现中：
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols):
+  for eachGrammarStartSymbol in grammar.keys():
+    for eachGrammar in grammar:
+      for eachPostGrammar in grammar[eachGrammar]:
+        if eachGrammarStartSymbol in eachPostGrammar:
+          # 1. 产生式形如：S->aX，将集合 Follow(S) 中的所有元素加入 Follow(X) 中
+          if ...
+          # 2. 产生式形如：S->aXb
+          else ...
+            # 2.1 b 为终结符：将 b 加入 Follow(X) 中
+            if ...
+            # 2.2 b 为非终结符
+            else ...
+  return followSet
+\end{minted}
 
 \subsubsection{得到相应的 LL(1) 分析表}
 

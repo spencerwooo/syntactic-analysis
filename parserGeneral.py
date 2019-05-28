@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import xml.etree.ElementTree as ET
-from anytree import Node, RenderTree
+from anytree import Node, RenderTree, PreOrderIter
 
 
 def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
@@ -78,12 +78,18 @@ def createParserTree(inputToken, grammar, terminalSymbols, nonTerminalSymbols, a
         for item in reversed(row[inputToken[i][1].text]):
           if item != 'ε':
             parseStack.append(item)
+        for item in row[inputToken[i][1].text]:
+          if item != 'ε':
+            Node(item, parent=currentRoot)
         print(parseStack, inputToken[i][1].text, row[inputToken[i][1].text])
       elif inputToken[i][2].text in row.keys():
         parseStack.pop()
         for item in reversed(row[inputToken[i][2].text]):
           if item != 'ε':
             parseStack.append(item)
+        for item in row[inputToken[i][2].text]:
+          if item != 'ε':
+            Node(item, parent=currentRoot)
         print(parseStack, inputToken[i][1].text, row[inputToken[i][2].text])
       else:
         print('[ERROR] Parse failed!')
