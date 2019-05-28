@@ -232,7 +232,8 @@ while True:
 在具体的代码实现中：
 
 \begin{minted}[linenos,frame=lines,framesep=2mm]{python}
-def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols):
+def getFOLLOW(
+  firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols):
   for eachGrammarStartSymbol in grammar.keys():
     for eachGrammar in grammar:
       for eachPostGrammar in grammar[eachGrammar]:
@@ -248,14 +249,213 @@ def getFOLLOW(firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
   return followSet
 \end{minted}
 
+对于 Follow 集合，我们同样也需要通过递归求取的方式保证我们求得的 Follow 集合完整。在主控程序中，我们循环求取 Follow 集合，直到两次求得的 Follow 集合相同即可停止。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+grammarTop = list(grammar.keys())[0]
+grammarFollowSet = collections.defaultdict(list, {grammarTop: ['#']})
+grammarFollowSet = parserUtils.getFOLLOW(
+    grammarFirstSet, grammarFollowSet, grammar,
+    terminalSymbols, nonTerminalSymbols)
+while True:
+  originalFollowSet = copy.deepcopy(grammarFollowSet)
+  grammarFollowSet = parserUtils.getFOLLOW(
+      grammarFirstSet, grammarFollowSet, grammar,
+      terminalSymbols, nonTerminalSymbols)
+  if grammarFollowSet == originalFollowSet:
+    break
+\end{minted}
+
 \subsubsection{得到相应的 LL(1) 分析表}
+从上面两步骤我们得到了文法的 First 和 Follow 集合。这一步我们可以开始对 LL(1) 分析表进行构造。分析表以 $M[A,a]$ 形式的矩阵来表示，A 是非终结符号，a 是文法的终结符号（或“\#”）。每一个矩阵的元素都存有一条关于非终结符 A 的产生式来表示相应的分析动作。
+
+我们在获得了 First 和 Follow 集合之后，可以通过下面的算法构建 LL(1) 分析表：
+
+\noindent\fbox{%
+  \parbox{\linewidth}{%
+对文法 G 中每个产生式 $A \rightarrow \gamma_1 | \gamma_2 | \dots | \gamma_m$：
+\begin{itemize}
+  \item 如果：$a \in FIRST(\gamma_i)$，置 $M[A, a]$ 为 $A \rightarrow \gamma_i$
+  \item 如果：$\epsilon \in FIRST(\gamma_i)$：
+  \begin{itemize}
+    \item 对于 $\forall a \in FOLLOW(A)$：置 $M[A, a]$ 为 $A \rightarrow \gamma_i$
+  \end{itemize}
+  \item 如果：$M[A, a]$ 没有定义，跳出循环，抛出异常。
+\end{itemize}
+  }%
+}
+
+综合上面的算法，我们非常容易就能利用下面所述的代码进行具体的实现：
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def createAnalyzeTable(
+  grammar, terminalSymbols, nonTerminalSymbols, firstSet, followSet):
+  analyzeTable = collections.defaultdict(dict)
+  # 对每个文法的生成式 A -> γ
+  for eachGrammar in grammar:
+    for eachPostGrammar in grammar[eachGrammar]:
+      # 先求一个 First(γ)
+      ...
+      # 1. 对每个终结符：
+      for eachTerminalSymbol in terminalSymbols:
+        # 如果终结符在 First(γ) 里面，那么就加入 LL1 分析表
+        if ...
+      # 2. 如果 First(γ) 中含有空串，那么就把所有在 Follow(A) 集合中的终结符
+      # 加入 LL1 分析表
+      if 'ε' in postGrammarFirstSet:
+        for ...
+  return analyzeTable
+\end{minted}
+
+至此，我们已经成功将全部的 LL(1) 语法分析器的内部模块构建完成。主控程序可以接受输入，通过 LL(1) 分析表构建语法树。
 
 \subsubsection{处理输入 Token，得到分析树}
+接下来，我们就需要将 Token 内容读入，按照词法分析的输出顺序进行读入。之后，我们通过下面的算法分析输入串，得到语法树。
+
+\noindent\fbox{%
+  \parbox{\linewidth}{%
+初始化：将“\#”和文法开始符号压入分析栈中，将输入串第一个符号读入 a。\\
+接下来，循环分析输入串：
+\begin{itemize}
+  \item 如果当前分析栈栈顶符号 X 和 a 都是文法终结符：
+  \begin{itemize}
+    \item $X = a = \#$：表示分析成功，跳出循环
+    \item $X = a \neq \#$：将 X 从栈中 pop 出，将 a 指向下一个输入字符
+    \item $X \neq a$：表示不匹配，输入串出现问题，抛出异常，停止分析
+  \end{itemize}
+  \item 如果 X 属于非终结符，那么对于分析表 M 中的 M[X, a]：
+  \begin{itemize}
+    \item 如果 M[X, a] 中包含一个产生式，那么将 X 从分析栈中 pop 出，并将产生式右侧后缀符号序列按倒序依次压入分析栈中。（如果产生式是 “$X \rightarrow \epsilon$”，那么仅将 X 从栈中 pop 出。）
+    \item 如果 M[X, a] 中为空，那么表示输入串出现问题，抛出异常，停止分析。
+  \end{itemize}
+\end{itemize}
+  }%
+}
+
+在具体的实现过程中，我们首先通过 \texttt{ElementTree} 模块读入 \texttt{input.token.xml}，将里面的 Token 获取得到 Token 输入列表。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def readToken(filePath):
+  """
+  读入 Token XML 中的内容
+  """
+  inputTokenList = []
+  tokenRoot = ET.parse(filePath).getroot()
+  tokens = tokenRoot[0]
+  for i in range(0, len(tokens)):
+    inputTokenList.append(tokens[i])
+  return inputTokenList
+
+# 分析输入 Token 文件
+tokenFilePath = os.path.join('test', 'input.token.xml')
+tokenList = readToken(tokenFilePath)
+\end{minted}
+
+之后将 Token 列表依次经过语法分析器进行分析，得到相应的分析树。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+def parseToken(
+  inputToken, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
+  parseStack = ['#']
+  ... # 初始化
+
+  while True:
+    if ... # 如果分析栈顶元素和输入串都只剩下“#”，分析成功
+      if parseStack[-1] == '#' and inputToken[i][1].text == '#':
+        print('[INFO] Parse success!')
+        break
+      elif ...# 将栈顶元素 pop 出
+        parseStack.pop()
+        i = i + 1
+        print(parseStack, inputToken[i][1].text)
+      else: # 分析失败
+        print('[ERROR] Parse failed!')
+        break
+
+    elif ...# 与 LL(1) 分析表进行比对
+      row = analyzeTable[parseStack[-1]]
+      if ...:
+        ...
+      else:
+        print('[ERROR] Parse failed!')
+        break
+\end{minted}
 
 \section{运行效果}
-\subsection{语法树的生成}
+\subsection{文法的处理和 LL(1) 分析表的构建}
+首先，我读入了如 3.2.1 中定义的文法，得到如下的 \texttt{grammar}、\texttt{terminalSymbols}、\texttt{nonTerminalSymbols}、\texttt{first}、\texttt{follow} 的列表（或字典集合）：
 
-\subsection{得到抽象语法树的 XML 表示}
+\subsubsection{文法的输入结果}
+
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/grammar.png}
+  \caption{文法的输入字典}
+  \label{fig:figure2}
+\end{figure}
+
+可以看到，我们将文法 Grammar 按照上面 3.2.2 中的描述进行了存储，以列表的形式进行访问。
+
+\subsubsection{终结符和非终结符号}
+
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/term_non.png}
+  \caption{终结符和非终结符}
+  \label{fig:figure3}
+\end{figure}
+
+我们将文法进行遍历，得到了如上的终结符和非终结符列表。
+
+\subsubsection{First 和 Follow 集合}
+
+\begin{figure}[h]
+  \begin{subfigure}{\textwidth}
+    \includegraphics[width=\linewidth]{images/first.png}
+    \caption{First 集合}
+  \end{subfigure}
+  \begin{subfigure}{\textwidth}
+    \includegraphics[width=\linewidth]{images/follow.png}
+    \caption{Follow 集合}
+  \end{subfigure}
+  \caption{First 和 Follow 集合}
+  \label{fig:figure4}
+\end{figure}
+
+我们接下来，就会得到构建 LL(1) 分析表所需的 First 和 Follow 集合。
+
+\subsubsection{LL(1) 分析表的得到}
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{images/ll1_table.png}
+  \caption{LL(1) 分析表}
+  \label{fig:figure5}
+\end{figure}
+
+我们通过 First 和 Follow 集合就可以得到 LL(1) 分析表，如图 \ref{fig:figure5} 所示，我将 LL(1) 分析表通过字典的形式进行存储，以第一个单元格为例：
+
+\begin{table}[H]
+  \begin{tabular}{c|c}
+  \hline
+                    & int                                      \\ \hline
+  TRANSLATION\_UNIT & TRANSLATION\_UNIT → FUNCTION\_DEFINITION \\ \hline
+  \end{tabular}
+\end{table}
+
+我将其表示为：
+
+\begin{verbatim}
+('TRANSLATION_UNIT', {'int': ['FUNCTION_DEFINITION'] ... })
+\end{verbatim}
+
+这样的表示形式更加方便后面对 LL(1) 分析表进行查表操作。
+
+\subsection{语法树的生成}
+\subsubsection{对输入串分析的输出}
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/parse.png}
+  \caption{LL(1) 分析器的大致工作流程}
+  \label{fig:figure6}
+\end{figure}
+
+\subsubsection{得到抽象语法树的 XML 表示}
 
 \section{实验心得体会}
 通过本次实验，我不仅更加熟悉了语法分析的具体过程，对自上而下的语法分析过程更加了解，还对 C 语言的文法描述、LL(1) 分析法的具体过程以及通过 LL(1) 分析表处理输入串的过程有了全新的认识。我在本次实验中，通过自己的扩展，处理得到了一个相对清晰的 C 语言 LL(1) 文法子集，利用 Python 构建了 C 语言的语法分析器，并成功的通过 LL(1) 分析器得到了一段 C 语言代码的语法分析树。
