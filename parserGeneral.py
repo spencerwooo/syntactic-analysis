@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import collections
 import xml.etree.ElementTree as ET
-from anytree import Node, RenderTree, PreOrderIter
+from anytree import Node, RenderTree, PostOrderIter
 
 
 def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
@@ -46,7 +47,7 @@ def parseInputString(input, grammar, terminalSymbols, nonTerminalSymbols, analyz
       print('{0: >30}'.format(str(parseStack)), input[i], row[input[i]])
 
 
-def createParserTree(inputToken, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
+def parseToken(inputToken, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
   """
   开始了！分析树！
   """
@@ -63,7 +64,7 @@ def createParserTree(inputToken, grammar, terminalSymbols, nonTerminalSymbols, a
       if parseStack[-1] == '#' and inputToken[i][1].text == '#':
         print('[INFO] Parse success!')
         break
-      elif (parseStack[-1] == inputToken[i][1].text or parseStack[-1] == inputToken[i][2].text) and inputToken[i][1].text != '#':
+      elif (parseStack[-1] == inputToken[i][1].text or parseStack[-1] == inputToken[i][2].text) and parseStack[-1] != '#':
         parseStack.pop()
         i = i + 1
         print(parseStack, inputToken[i][1].text)
@@ -73,24 +74,35 @@ def createParserTree(inputToken, grammar, terminalSymbols, nonTerminalSymbols, a
 
     elif parseStack[-1] in nonTerminalSymbols:
       row = analyzeTable[parseStack[-1]]
+      for node in PostOrderIter(tree):
+        if node.name == parseStack[-1]:
+          currentRoot = node
+          break
+
       if inputToken[i][1].text in row.keys():
+        rule = row[inputToken[i][1].text]
         parseStack.pop()
-        for item in reversed(row[inputToken[i][1].text]):
+        for item in reversed(rule):
           if item != 'ε':
             parseStack.append(item)
-        for item in row[inputToken[i][1].text]:
+        for item in rule:
           if item != 'ε':
             Node(item, parent=currentRoot)
-        print(parseStack, inputToken[i][1].text, row[inputToken[i][1].text])
+        print(parseStack, inputToken[i][1].text, rule)
+
       elif inputToken[i][2].text in row.keys():
+        rule = row[inputToken[i][2].text]
         parseStack.pop()
-        for item in reversed(row[inputToken[i][2].text]):
+        for item in reversed(rule):
           if item != 'ε':
             parseStack.append(item)
-        for item in row[inputToken[i][2].text]:
+        for item in rule:
           if item != 'ε':
             Node(item, parent=currentRoot)
-        print(parseStack, inputToken[i][1].text, row[inputToken[i][2].text])
+        print(parseStack, inputToken[i][1].text, rule)
+
       else:
         print('[ERROR] Parse failed!')
         break
+
+  return tree

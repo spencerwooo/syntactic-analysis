@@ -14,6 +14,10 @@ import collections
 import copy
 import os
 import xml.etree.ElementTree as ET
+from anytree import RenderTree
+from anytree.exporter import DictExporter
+from dicttoxml import dicttoxml
+from xml.dom.minidom import parseString
 
 import parserUtils
 import parserGeneral
@@ -39,7 +43,7 @@ def main():
   -  5: Essential
   -  1: None
   """
-  logLevel = 1
+  logLevel = 10
 
   print('[INFO] Start parsing...')
 
@@ -112,8 +116,17 @@ def main():
   # 分析输入 Token 文件
   tokenFilePath = os.path.join('test', 'input.token.xml')
   tokenList = readToken(tokenFilePath)
-  parserGeneral.createParserTree(
+  tree = parserGeneral.parseToken(
       tokenList, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
+  for pre, _, node in RenderTree(tree):
+    print("%s%s" % (pre, node.name))
+
+  exporter = DictExporter(dictcls=collections.OrderedDict, attriter=sorted)
+  exportDict = exporter.export(tree)
+  xml = parseString(dicttoxml(exportDict, attr_type=False))
+  xml = xml.toprettyxml(indent='  ', encoding='utf-8')
+  with open('test/parse.xml', 'wb') as f:
+    f.write(xml)
 
 
 if __name__ == "__main__":

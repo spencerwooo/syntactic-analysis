@@ -174,10 +174,10 @@ def differentiateSymbols(grammar):
 首先，我们对文法的每一项非终结符求取其 First 集合。First 集合是非终结符（或终结符、空符号串等等）的开始符号集合。对于文法 G 来说，G 中的 $\forall \alpha \in V^*$ 终结首符号集合 $FIRST(\alpha)$ 为：
 
 \begin{equation}
-  FIRST(\alpha) = \{a | \alpha^* \implies a, a \in V_T\}
+  FIRST(\alpha) = \{a | \alpha^* \Rightarrow a, a \in V_T\}
 \end{equation}
 
-若 $a^* \implies \epsilon$，则 $\epsilon \in FIRST(\alpha)$。
+若 $a^* \Rightarrow \epsilon$，则 $\epsilon \in FIRST(\alpha)$。
 
 在求取 First 集合时，我们是通过下面大致的代码描述进行求取的。
 
@@ -210,10 +210,10 @@ while True:
 在上一步骤 First 集合的基础之上，我们求取 Follow 集合。Follow 集合是对于文法 G 的所有句型中能够紧跟在非终结符号后面的一切终结符号（或者“\#”）。对上下文无关文法 G 来说，S 是文法的开始符号，对于文法 G 的任何非终结符号 A：
 
 \begin{equation}
-  FOLLOW(A) = \{ a | S^* \implies \dots Aa \dots, a \in V_T^* \}
+  FOLLOW(A) = \{ a | S^* \Rightarrow \dots Aa \dots, a \in V_T^* \}
 \end{equation}
 
-若 $S^* \implies \dots A$，则 $\# \in FOLLOW(A)$。
+若 $S^* \Rightarrow \dots A$，则 $\# \in FOLLOW(A)$。
 
 我们在构造 Follow 集合时，采用下面描述的算法：
 
@@ -389,7 +389,7 @@ def parseToken(
 
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{images/grammar.png}
-  \caption{文法的输入字典}
+  \caption{文法的输入字典（部分）}
   \label{fig:figure2}
 \end{figure}
 
@@ -405,7 +405,7 @@ def parseToken(
 
 我们将文法进行遍历，得到了如上的终结符和非终结符列表。
 
-\subsubsection{First 和 Follow 集合}
+\subsubsection{First 和 Follow 集合（部分）}
 
 \begin{figure}[h]
   \begin{subfigure}{\textwidth}
@@ -416,26 +416,29 @@ def parseToken(
     \includegraphics[width=\linewidth]{images/follow.png}
     \caption{Follow 集合}
   \end{subfigure}
-  \caption{First 和 Follow 集合}
+  \caption{First 和 Follow 集合（部分）}
   \label{fig:figure4}
 \end{figure}
 
 我们接下来，就会得到构建 LL(1) 分析表所需的 First 和 Follow 集合。
 
-\subsubsection{LL(1) 分析表的得到}
+\subsubsection{LL(1) 分析表的构建}
 \begin{figure}[H]
   \includegraphics[width=\linewidth]{images/ll1_table.png}
-  \caption{LL(1) 分析表}
+  \caption{LL(1) 分析表（部分）}
   \label{fig:figure5}
 \end{figure}
 
 我们通过 First 和 Follow 集合就可以得到 LL(1) 分析表，如图 \ref{fig:figure5} 所示，我将 LL(1) 分析表通过字典的形式进行存储，以第一个单元格为例：
 
 \begin{table}[H]
-  \begin{tabular}{c|c}
-  \hline
-                    & int                                      \\ \hline
-  TRANSLATION\_UNIT & TRANSLATION\_UNIT → FUNCTION\_DEFINITION \\ \hline
+  \centering
+  \caption{LL(1) 分析表第一个单元格}
+  \label{tab:firstcell}
+  \begin{tabular}{@{}c|c@{}}
+  \toprule
+   & int \\ \midrule
+  TRANSLATION\_UNIT & TRANSLATION\_UNIT $\rightarrow$ FUNCTION\_DEFINITION \\ \bottomrule
   \end{tabular}
 \end{table}
 
@@ -451,9 +454,22 @@ def parseToken(
 \subsubsection{对输入串分析的输出}
 \begin{figure}[h]
   \includegraphics[width=\linewidth]{images/parse.png}
-  \caption{LL(1) 分析器的大致工作流程}
+  \caption{LL(1) 分析器分析过程的大致输出（部分）}
   \label{fig:figure6}
 \end{figure}
+
+可以看到，我将分析过程的每次入栈、出栈都进行了按步骤的输出。每一行输出的格式为“分析栈栈内元素、当前输入串输入元素、所使用的产生式（后半部分）”。以第二行为例子：
+
+\begin{table}[H]
+  \centering
+  \caption{分析过程第二行输出}
+  \label{tab:parseoutput}
+  \begin{tabular}{@{}c|c|c@{}}
+  \toprule
+  分析栈 & 输入字符 & 所使用的产生式 \\ \midrule
+  {[}'\#', 'FUNC\_DEF'{]} & int & TRANS\_UNIT $\rightarrow$ FUNC\_DEF \\ \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsubsection{得到抽象语法树的 XML 表示}
 
