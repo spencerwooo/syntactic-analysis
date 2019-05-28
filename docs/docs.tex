@@ -471,7 +471,18 @@ def parseToken(
   \end{tabular}
 \end{table}
 
-\subsubsection{得到抽象语法树的 XML 表示}
+\subsubsection{得到语法树并输出为 XML 文件}
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/parsetree.png}
+  \caption{分析得到的语法树（部分）}
+  \label{fig:figure7}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{images/xml.png}
+  \caption{通过语法树生成 XML 文件（部分）}
+  \label{fig:figure8}
+\end{figure}
 
 \section{实验心得体会}
 通过本次实验，我不仅更加熟悉了语法分析的具体过程，对自上而下的语法分析过程更加了解，还对 C 语言的文法描述、LL(1) 分析法的具体过程以及通过 LL(1) 分析表处理输入串的过程有了全新的认识。我在本次实验中，通过自己的扩展，处理得到了一个相对清晰的 C 语言 LL(1) 文法子集，利用 Python 构建了 C 语言的语法分析器，并成功的通过 LL(1) 分析器得到了一段 C 语言代码的语法分析树。
