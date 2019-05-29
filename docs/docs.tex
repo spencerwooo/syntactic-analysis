@@ -356,8 +356,13 @@ tokenList = readToken(tokenFilePath)
 \begin{minted}[linenos,frame=lines,framesep=2mm]{python}
 def parseToken(
   inputToken, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable):
+  # 初始化
   parseStack = ['#']
-  ... # 初始化
+  grammarTop = list(grammar.keys())[0]
+  parseStack.append(grammarTop)
+  # 构建树
+  tree = Node(grammarTop)
+  ...
 
   while True:
     if ... # 如果分析栈顶元素和输入串都只剩下“#”，分析成功
@@ -374,20 +379,41 @@ def parseToken(
 
     elif ...# 与 LL(1) 分析表进行比对
       row = analyzeTable[parseStack[-1]]
+      # 搜索当前节点，为了后续构建树做准备
+      for node in PostOrderIter(tree):
+        ...
       if ...:
         ...
+        # 添加树节点
+        Node(item, parent=currentRoot)
       else:
         print('[ERROR] Parse failed!')
         break
+  return tree
 \end{minted}
+
+为了方便下面构建语法树，以及生成 XML 文档，我选用了 Python 的 \texttt{anytree} 模块用来作为我语法树的数据结构。在生成的过程中，我首先定义语法树的根节点 \texttt{Node(root)} 为文法的开始符号，之后在分析的过程中，只要涉及到文法产生式，我就通过后序遍历搜索当前树中我们正在处理的根节点，将文法的产生式依次添加到树的当前根节点处，最终得到我们所需要的语法树。
+
+\begin{minted}[linenos,frame=lines,framesep=2mm]{python}
+exporter = DictExporter(dictcls=collections.OrderedDict, attriter=sorted)
+exportDict = exporter.export(tree)
+xml = parseString(dicttoxml(exportDict, attr_type=False))
+xml = xml.toprettyxml(indent='  ', encoding='utf-8')
+with open('test/parse.xml', 'wb') as f:
+  f.write(xml)
+\end{minted}
+
+接下来，我们将得到的语法树通过 \texttt{anytree} 内部 \texttt{anytree.exporter} 类中引入的\\
+\texttt{DictExporter} 将生成的语法树转化为字典的表示形式，并通过 \texttt{dicttoxml} 直接生成 XML 文档。至此，我们的全部分析过程就完成了。
 
 \section{运行效果}
 \subsection{文法的处理和 LL(1) 分析表的构建}
-首先，我读入了如 3.2.1 中定义的文法，得到如下的 \texttt{grammar}、\texttt{terminalSymbols}、\texttt{nonTerminalSymbols}、\texttt{first}、\texttt{follow} 的列表（或字典集合）：
+首先，我读入了如 3.2.1 中定义的文法，得到如下的 \texttt{grammar}、\texttt{terminalSymbols}、\\
+\texttt{nonTerminalSymbols}、\texttt{first}、\texttt{follow} 的列表（或字典集合）：
 
 \subsubsection{文法的输入结果}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \includegraphics[width=\linewidth]{images/grammar.png}
   \caption{文法的输入字典（部分）}
   \label{fig:figure2}
@@ -397,7 +423,7 @@ def parseToken(
 
 \subsubsection{终结符和非终结符号}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \includegraphics[width=\linewidth]{images/term_non.png}
   \caption{终结符和非终结符}
   \label{fig:figure3}
@@ -407,20 +433,19 @@ def parseToken(
 
 \subsubsection{First 和 Follow 集合（部分）}
 
-\begin{figure}[h]
-  \begin{subfigure}{\textwidth}
-    \includegraphics[width=\linewidth]{images/first.png}
-    \caption{First 集合}
-  \end{subfigure}
-  \begin{subfigure}{\textwidth}
-    \includegraphics[width=\linewidth]{images/follow.png}
-    \caption{Follow 集合}
-  \end{subfigure}
-  \caption{First 和 Follow 集合（部分）}
-  \label{fig:figure4}
+我们在上面得到了文法以及相应的终结符、非终结符集合之后，就可以对文法进行分析，得到非终结符的 First 集合和 Follow 集合。
+
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{images/first.png}
+  \caption{First 集合（部分）}
+  \label{fig:figure4-1}
 \end{figure}
 
-我们接下来，就会得到构建 LL(1) 分析表所需的 First 和 Follow 集合。
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{images/follow.png}
+  \caption{Follow 集合（部分）}
+  \label{fig:figure4-2}
+\end{figure}
 
 \subsubsection{LL(1) 分析表的构建}
 \begin{figure}[H]
@@ -472,17 +497,23 @@ def parseToken(
 \end{table}
 
 \subsubsection{得到语法树并输出为 XML 文件}
-\begin{figure}[h]
+最终，经过 LL(1) 分析器进行分析，我们得到了如下的语法树。
+
+\begin{figure}[H]
   \includegraphics[width=\linewidth]{images/parsetree.png}
   \caption{分析得到的语法树（部分）}
   \label{fig:figure7}
 \end{figure}
 
-\begin{figure}[h]
+我们将语法树输出为 XML 形式的文档，并保存至文件之中，方便后续的模块调用。
+
+\begin{figure}[H]
   \includegraphics[width=\linewidth]{images/xml.png}
   \caption{通过语法树生成 XML 文件（部分）}
   \label{fig:figure8}
 \end{figure}
+
+至此，实验结果的全部内容就全部结束了。
 
 \section{实验心得体会}
 通过本次实验，我不仅更加熟悉了语法分析的具体过程，对自上而下的语法分析过程更加了解，还对 C 语言的文法描述、LL(1) 分析法的具体过程以及通过 LL(1) 分析表处理输入串的过程有了全新的认识。我在本次实验中，通过自己的扩展，处理得到了一个相对清晰的 C 语言 LL(1) 文法子集，利用 Python 构建了 C 语言的语法分析器，并成功的通过 LL(1) 分析器得到了一段 C 语言代码的语法分析树。
